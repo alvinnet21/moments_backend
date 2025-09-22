@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      html, body { margin: 0; padding: 0; }
+      #swagger-ui { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = () => {
+        // Build spec URL that works under vhost or subfolder (e.g. /hahah/public)
+        const path = window.location.pathname;
+        const match = path.match(/^(.*)\/(docs)(\/|$)/);
+        const base = match ? match[1] : '';
+        const specUrl = `${base}/docs/openapi.yaml`;
+
+        window.ui = SwaggerUIBundle({
+          url: specUrl,
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'StandaloneLayout',
+          validatorUrl: null,
+          requestInterceptor: (req) => {
+            try {
+              const u = new URL(req.url, window.location.origin);
+              if (u.pathname.startsWith('/api') && base) {
+                u.pathname = `${base}${u.pathname}`;
+                req.url = u.toString();
+              }
+            } catch (e) { /* noop */ }
+            return req;
+          }
+        });
+      };
+    </script>
+  </body>
+  </html>
